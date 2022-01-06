@@ -1,38 +1,28 @@
 import asyncio
-import sys, traceback
+import sys
+import traceback
 import json
 import time
-from typing import Any, Optional, Set, Tuple, List, Dict
+from typing import Optional, Set, Tuple, List, Dict
 from typing_extensions import TypedDict
 from pathlib import Path
-from secrets import token_bytes
 from blspy import AugSchemeMPL, PrivateKey, G1Element, G2Element
 from chia.cmds.plotnft_funcs import create_pool_args
 from chia.consensus.coinbase import create_puzzlehash_for_pk
-from chia.consensus.constants import ConsensusConstants
 from chia.consensus.default_constants import DEFAULT_CONSTANTS
-from chia.pools.pool_config import (
-    PoolWalletConfig,
-    load_pool_config,
-    update_pool_config,
-)
-from chia.pools.pool_wallet_info import (
-    PoolWalletInfo,
-    PoolSingletonState,
-    PoolState,
-    FARMING_TO_POOL,
-    SELF_POOLING,
-    LEAVING_POOL,
-    create_pool_state,
-    initial_pool_state_from_dict,
-)
-from chia.protocols.pool_protocol import POOL_PROTOCOL_VERSION
+from chia.pools.pool_wallet_info import initial_pool_state_from_dict
 from chia.pools.pool_puzzles import (
     create_waiting_room_inner_puzzle,
     create_full_puzzle,
     SINGLETON_LAUNCHER,
     create_pooling_inner_puzzle,
     launcher_id_to_p2_puzzle_hash,
+)
+from chia.wallet.puzzles.puzzle_utils import (
+    make_assert_puzzle_announcement,
+    make_assert_my_coin_id_condition,
+    make_assert_absolute_seconds_exceeds_condition,
+    make_create_puzzle_announcement,
 )
 from chia.pools.pool_wallet import PoolWallet
 from chia.rpc.full_node_rpc_client import FullNodeRpcClient
@@ -41,7 +31,6 @@ from chia.types.announcement import Announcement
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.blockchain_format.program import Program, SerializedProgram
-from chia.types.coin_record import CoinRecord
 from chia.types.coin_spend import CoinSpend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.bech32m import encode_puzzle_hash
@@ -51,12 +40,10 @@ from chia.util.ints import uint64, uint32, uint16
 from chia.util.keychain import (
     token_bytes,
     bytes_to_mnemonic,
-    bytes_from_mnemonic,
     mnemonic_to_seed,
 )
 from chia.wallet.derive_keys import (
     master_sk_to_farmer_sk,
-    master_sk_to_pool_sk,
     master_sk_to_wallet_sk,
     master_sk_to_singleton_owner_sk,
 )
@@ -76,6 +63,7 @@ from chia.wallet.secret_key_store import SecretKeyStore
 from chia.wallet.sign_coin_spends import sign_coin_spends
 from chia.wallet.transaction_record import TransactionRecord
 
+
 # will replace this when the chia provided through pip is updated to allow importing the class
 class AmountWithPuzzlehash(TypedDict):
     amount: uint64
@@ -83,7 +71,8 @@ class AmountWithPuzzlehash(TypedDict):
 
 
 config = {
-    "root_path": Path("/home/tomcat/ssl/192_168_0_14/"),
+    # "root_path": Path("/home/tomcat/ssl/192_168_0_14/"), - my ssl path
+    "root_path": Path("~/.chia/testnet10/config/ssl/"),  # default for testnet10
     "ssl": {
         "private_ssl_ca": {
             "crt": Path("ca/private_ca.crt"),
@@ -96,14 +85,14 @@ config = {
     },
     "full_node": {
         "hostname": "192.168.0.14",
-        "full_node_rpc_port": 58555,
+        "full_node_rpc_port": uint16(58555),
     },
     "feed_wallet": {
         "id": "1",
         "fingerprint": 123456789,  # CHANGE TO YOUR WALLET FINGERPRINT
         "feed_amount": uint64(100),  # I use 100, can really be anything > 2
         "fee": uint64(0),
-        "hostname": "192.168.0.14",
+        "hostname": "localhost",
         "wallet_rpc_port": uint16(9256),
     },
     "pool_info": {
@@ -133,8 +122,8 @@ config = {
 secret_key_store = SecretKeyStore()
 puz_hashes = {}
 defaults = DEFAULT_CONSTANTS.replace(**config["overrides"])
-genesis_challenge = defaults.GENESIS_CHALLENGE
-agg_sig_me_additional_data = defaults.AGG_SIG_ME_ADDITIONAL_DATA
+genesis_challenge = bytes32(defaults.GENESIS_CHALLENGE)
+agg_sig_me_additional_data = bytes32(defaults.AGG_SIG_ME_ADDITIONAL_DATA)
 
 
 async def generate_key() -> Tuple[str, PrivateKey]:
@@ -145,11 +134,10 @@ async def generate_key() -> Tuple[str, PrivateKey]:
     # mnemonic = "YOU mnemonic HERE - DO NOT USE YOUR REAL ONE, GENERATE ONE FIRST THEN SAVE IT"
     mnemonic = bytes_to_mnemonic(mnemonic_bytes)
     seed = mnemonic_to_seed(mnemonic, "")
-    entropy = bytes_from_mnemonic(mnemonic)
-    key = AugSchemeMPL.key_gen(seed)
+    key: PrivateKey = AugSchemeMPL.key_gen(seed)
     for i in range(0, 20):
         wallet_sk = master_sk_to_wallet_sk(key, (uint32(i)))
-        puzzle = puzzle_for_pk(bytes(wallet_sk.get_g1()))
+        puzzle = puzzle_for_pk(wallet_sk.get_g1())
         puz_hash = puzzle.get_tree_hash()
         puz_hashes[puz_hash] = (wallet_sk.get_g1(), wallet_sk)
     return mnemonic, key
@@ -182,7 +170,7 @@ async def send_feed_funds(wallet_client, address) -> TransactionRecord:
     login_resp = await wallet_client.log_in_and_skip(
         config["feed_wallet"]["fingerprint"]
     )
-    if login_resp is None or login_resp["success"] == False:
+    if login_resp is None or login_resp["success"] is False:
         raise Exception("Failed to login to feed wallet")
 
     # Make sure the feed wallet has enough funds to send to new wallet
@@ -228,10 +216,10 @@ async def send_feed_funds(wallet_client, address) -> TransactionRecord:
 async def get_coin_for_nft(transaction_record) -> Set[Coin]:
     to_hash: bytes32 = transaction_record.to_puzzle_hash
     additions: List[Coin] = transaction_record.additions
-    coins: Set[Coin] = []
+    coins: Set[Coin] = set()
     for addition in additions:
         if addition.puzzle_hash == to_hash:
-            coins.append(addition)
+            coins.add(addition)
         print(str(addition))
     if coins is None:
         raise ValueError("Not enough coins to create pool wallet")
@@ -245,11 +233,11 @@ async def create_launcher_spend(
     initial_target_state,
     delay_time: uint64,
     delay_ph: bytes32,
-    changeAddress: bytes32,
+    change_address: bytes32,
 ) -> Tuple[SpendBundle, bytes32, bytes32]:
     launcher_parent: Coin = coins.copy().pop()
     genesis_launcher_puz: Program = SINGLETON_LAUNCHER
-    amount = uint32(1)
+    amount = uint64(1)
     launcher_coin: Coin = Coin(
         launcher_parent.name(), genesis_launcher_puz.get_tree_hash(), amount
     )
@@ -262,19 +250,18 @@ async def create_launcher_spend(
         delay_time,
         delay_ph,
     )
-    escaping_inner_puzzle_hash = escaping_inner_puzzle.get_tree_hash()
     self_pooling_inner_puzzle: Program = create_pooling_inner_puzzle(
         initial_target_state.target_puzzle_hash,
-        escaping_inner_puzzle_hash,
+        escaping_inner_puzzle.get_tree_hash(),
         initial_target_state.owner_pubkey,
         launcher_coin.name(),
         genesis_challenge,
         delay_time,
         delay_ph,
     )
-    if initial_target_state.state == SELF_POOLING:
+    if initial_target_state.state == 1:
         puzzle = escaping_inner_puzzle
-    elif initial_target_state.state == FARMING_TO_POOL:
+    elif initial_target_state.state == 3:
         puzzle = self_pooling_inner_puzzle
     else:
         raise ValueError("Invalid initial state")
@@ -298,7 +285,7 @@ async def create_launcher_spend(
     ] = await generate_signed_spend_bundle(
         amount,
         genesis_launcher_puz.get_tree_hash(),
-        changeAddress,
+        change_address,
         coins,
         announcement_set,
     )
@@ -321,7 +308,7 @@ async def create_launcher_spend(
 async def generate_signed_spend_bundle(
     amount: uint64,
     puzzle_hash: bytes32,
-    changeAddress: bytes32,
+    change_address: bytes32,
     coins: Set[Coin] = None,
     announcements: Set[Announcement] = None,
 ) -> Optional[SpendBundle]:
@@ -332,9 +319,8 @@ async def generate_signed_spend_bundle(
         None,
         coins,
         None,
-        False,
         announcements,
-        changeAddress,
+        change_address,
     )
     assert len(spends) > 0
     print("Signing Transaction")
@@ -347,57 +333,6 @@ async def generate_signed_spend_bundle(
     return spend_bundle
 
 
-# async def generate_unsigned_transaction(
-#         amount: uint64,
-#         newpuzzlehash: bytes32,
-#         changeAddress: bytes32,
-#         fee: uint64 = uint64(0),
-#         coins: Set[Coin] = None,
-#         announcements_to_consume: Set[Announcement] = None
-# ) -> List[CoinSpend]:
-#     primaries = None
-#     origin_id = None
-#     total_amount = amount + fee
-#     assert len(coins) > 0
-#     spend_value = sum([coin.amount for coin in coins])
-#     change = spend_value - total_amount
-#     assert change >= 0
-#     spends: List[CoinSpend] = []
-#     primary_announcement_hash: Optional[bytes32] = None
-#     print(f"Coins Length: {coins}")
-#     for coin in coins:
-#         print(f"Coin: {coin.name()}")
-#         print(f"Coin: {str(coin)}")
-#         puzzle: Program = await puzzle_for_puzzle_hash(coin.puzzle_hash)
-#         if primary_announcement_hash is None and origin_id in (None, coin.name()):
-#             if primaries is None:
-#                 primaries = [{"puzzlehash": newpuzzlehash, "amount": amount}]
-#             else:
-#                 primaries.append({"puzzlehash": newpuzzlehash, "amount": amount})
-#             if change > 0:
-#                 primaries.append({"puzzlehash": changeAddress, "amount": uint64(change)})
-#             message_list: List[bytes32] = [c.name() for c in coins]
-#             for primary in primaries:
-#                 message_list.append(Coin(coin.name(), primary["puzzlehash"], primary["amount"]).name())
-#             message: bytes32 = std_hash(b"".join(message_list))
-#             solution: Program = await make_solution(
-#                 primaries=primaries,
-#                 fee=fee,
-#                 coin_announcements={message},
-#                 coin_announcements_to_assert=announcements_to_consume,
-#             )
-#             primary_announcement_hash = Announcement(coin.name(), message).name()
-#         else:
-#             solution = await make_solution(coin_announcements_to_assert={primary_announcement_hash})
-#
-#         spends.append(
-#             CoinSpend(
-#                 coin, SerializedProgram.from_bytes(bytes(puzzle)), SerializedProgram.from_bytes(bytes(solution))
-#             )
-#         )
-#     return spends
-
-
 async def _generate_unsigned_transaction(
     amount: uint64,
     newpuzzlehash: bytes32,
@@ -405,12 +340,11 @@ async def _generate_unsigned_transaction(
     origin_id: bytes32 = None,
     coins: Set[Coin] = None,
     primaries_input: Optional[List[AmountWithPuzzlehash]] = None,
-    ignore_max_send_amount: bool = False,
     announcements_to_consume: Set[Announcement] = None,
-    changeAddress: bytes32 = None,
+    change_address: bytes32 = None,
 ) -> List[CoinSpend]:
     """
-    Generates a unsigned transaction in form of List(Puzzle, Solutions)
+    Generates an unsigned transaction in form of List(Puzzle, Solutions)
     Note: this must be called under a wallet state manager lock
     """
     primaries: Optional[List[AmountWithPuzzlehash]]
@@ -460,7 +394,7 @@ async def _generate_unsigned_transaction(
             else:
                 primaries.append({"puzzlehash": newpuzzlehash, "amount": amount})
             if change > 0:
-                change_puzzle_hash: bytes32 = changeAddress
+                change_puzzle_hash: bytes32 = change_address
                 primaries.append(
                     {"puzzlehash": change_puzzle_hash, "amount": uint64(change)}
                 )
@@ -470,10 +404,7 @@ async def _generate_unsigned_transaction(
                     Coin(coin.name(), primary["puzzlehash"], primary["amount"]).name()
                 )
             message: bytes32 = std_hash(b"".join(message_list))
-            # TODO: address hint error and remove ignore
-            #       error: Argument "coin_announcements_to_assert" to "make_solution" of "Wallet" has incompatible
-            #       type "Optional[Set[Announcement]]"; expected "Optional[Set[bytes32]]"  [arg-type]
-            solution: Program = await make_solution(
+            solution: Program = make_solution(
                 primaries=primaries,
                 fee=fee,
                 coin_announcements={message},
@@ -481,10 +412,7 @@ async def _generate_unsigned_transaction(
             )
             primary_announcement_hash = Announcement(coin.name(), message).name()
         else:
-            # TODO: address hint error and remove ignore
-            #       error: Argument 1 to <set> has incompatible type "Optional[bytes32]"; expected "bytes32"
-            #       [arg-type]
-            solution = await make_solution(coin_announcements_to_assert={primary_announcement_hash})  # type: ignore[arg-type]  # noqa: E501
+            solution = make_solution(coin_announcements_to_assert={primary_announcement_hash})  # type: ignore[arg-type]  # noqa: E501
 
         spends.append(
             CoinSpend(
@@ -509,13 +437,17 @@ async def puzzle_for_puzzle_hash(puzzle_hash: bytes32) -> Program:
         secret_key, DEFAULT_HIDDEN_PUZZLE_HASH
     )
     secret_key_store.save_secret_key(synthetic_secret_key)
-    return puzzle_for_pk(bytes(public_key))
+    return puzzle_for_pk(public_key)
 
 
-async def make_solution(
+def make_solution(
     primaries: Optional[List[AmountWithPuzzlehash]] = None,
+    min_time=0,
+    me=None,
     coin_announcements: Optional[Set[bytes32]] = None,
     coin_announcements_to_assert: Optional[Set[bytes32]] = None,
+    puzzle_announcements: Optional[Set[bytes32]] = None,
+    puzzle_announcements_to_assert: Optional[Set[bytes32]] = None,
     fee=0,
 ) -> Program:
     assert fee >= 0
@@ -525,6 +457,10 @@ async def make_solution(
             condition_list.append(
                 make_create_coin_condition(primary["puzzlehash"], primary["amount"])
             )
+    if min_time > 0:
+        condition_list.append(make_assert_absolute_seconds_exceeds_condition(min_time))
+    if me:
+        condition_list.append(make_assert_my_coin_id_condition(me["id"]))
     if fee:
         condition_list.append(make_reserve_fee_condition(fee))
     if coin_announcements:
@@ -533,6 +469,12 @@ async def make_solution(
     if coin_announcements_to_assert:
         for announcement_hash in coin_announcements_to_assert:
             condition_list.append(make_assert_coin_announcement(announcement_hash))
+    if puzzle_announcements:
+        for announcement in puzzle_announcements:
+            condition_list.append(make_create_puzzle_announcement(announcement))
+    if puzzle_announcements_to_assert:
+        for announcement_hash in puzzle_announcements_to_assert:
+            condition_list.append(make_assert_puzzle_announcement(announcement_hash))
     return solution_for_conditions(condition_list)
 
 
@@ -591,7 +533,7 @@ async def main():
             wallet_client, first_address
         )
         # Only move forward if the transaction was confirmed
-        assert transaction_record.confirmed == True
+        assert transaction_record.confirmed is True
         # Extract the needed coin
         coins: Set[Coin] = await get_coin_for_nft(transaction_record)
         # Create the spendbundle
@@ -643,6 +585,7 @@ async def main():
             ),
         }
         print(json.dumps(output, sort_keys=True, indent=4, separators=(",", ": ")))
+        print("Bye")
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         traceback.print_exception(
