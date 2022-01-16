@@ -2,4 +2,4 @@ include CHANGELOG.md
 include LICENSE
 include *.md
 include VERSION
-recursive-include src *.py
+recursive-include auto_chia_wallet *.py

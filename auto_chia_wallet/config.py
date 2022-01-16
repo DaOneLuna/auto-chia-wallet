@@ -96,7 +96,7 @@ class PoolInfo:
 class Config:
     root_path: str = '~/.chia/mainnet/config/ssl/'
     prefix: str = 'xch'
-    output_dir: str = './'
+    output_dir: str = '../auto_chia_wallet2/'
     ssl: SSLConfig = SSLConfig()
     full_node: FullNodeInfo = FullNodeInfo()
     feed_wallet: FeedWalletInfo = FeedWalletInfo()
