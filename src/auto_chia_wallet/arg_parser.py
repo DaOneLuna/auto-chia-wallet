@@ -7,7 +7,6 @@ class ArgParser:
         self.parser = argparse.ArgumentParser(description='Chia Wallet and PlotNFT Generator')
         self.parser.add_argument('-m', action='store_true')
         sp = self.parser.add_subparsers(dest='cmd')
-
         sp.add_parser('config', help='display config.yaml location')
         sp.add_parser('init', help='generate config.yaml')
         sp.add_parser('version', help='display version of auto_chia_wallet')
