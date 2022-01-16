@@ -1,0 +1,32 @@
+root_path: "~/.chia/mainnet/config/ssl/"
+ssl:
+  private_ssl_ca:
+    crt: "ca/private_ca.crt"
+    key: "ca/private_ca.key"
+  daemon_ssl:
+    private_crt: "daemon/private_daemon.crt"
+    private_key: "daemon/private_daemon.key"
+full_node: {
+  hostname: "localhost"
+  full_node_rpc_port: 8555
+feed_wallet:
+  id: "1" # CHANGE TO YOUR WALLET ID
+  fingerprint: 1234567890  # CHANGE TO YOUR WALLET FINGERPRINT
+  feed_amount: 100  # I use 100, can really be anything > 2
+  fee: 0
+  hostname: "localhost"
+  wallet_rpc_port: 9256
+pool_info:
+  state: "SELF_POOLING"  # SELF_POOLING, FARMING_TO_POOL
+  #url: "https://testnet.druid.garden"  # Can be any pool, this is mine on testnet10
+prefix: "xch"
+overrides:
+# For Testnet10 use below, otherwise it will use mainnet
+#    AGG_SIG_ME_ADDITIONAL_DATA: "ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"
+#    DIFFICULTY_CONSTANT_FACTOR: 10052721566054
+#    GENESIS_CHALLENGE: "ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"
+#    GENESIS_PRE_FARM_FARMER_PUZZLE_HASH: "3d8765d3a597ec1d99663f6c9816d915b9f68613ac94009884c4addaefcce6af"
+#    GENESIS_PRE_FARM_POOL_PUZZLE_HASH: "d23da14695a188ae5708dd152263c4db883eb27edeb936178d4d988b8f3ce5fc"
+"output":
+  "path": "./"
+  "name": "account.json"

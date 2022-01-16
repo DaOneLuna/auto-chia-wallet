@@ -1,0 +1,5 @@
+include CHANGELOG.md
+include LICENSE
+include *.md
+include VERSION
+recursive-include src *.py
