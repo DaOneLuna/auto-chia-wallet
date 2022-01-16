@@ -1,7 +1,9 @@
+import asyncio
 import os
 
 from arg_parser import ArgParser
-from config import get_config_path
+from config import get_config_path, load_config
+from auto_wallet import generate_key, generate_plotnft, generate_plotnft_from_mnemonic
 
 
 def main():
@@ -28,11 +30,15 @@ def main():
         return 0
 
     elif args.cmd == 'generate':
+        config = load_config()
         if args.config_subcommand == 'key':
-            print(f"Generate key Called'")
+            asyncio.run(generate_key(config))
             return 0
         elif args.config_subcommand == 'plotnft':
-            print(f"Generate PlotNFT Called'")
+            if args.m:
+                asyncio.run(generate_plotnft_from_mnemonic(config))
+            else:
+                asyncio.run(generate_plotnft(config))
             return 0
         else:
             print("No action requested, add 'key' or 'plotnft'.")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
 
-import auto_wallet
+import cli
 
-auto_wallet.main()
+cli.main()
