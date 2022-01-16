@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
 
-import cli
+from auto_chia_wallet.cli import main
 
-cli.main()
+main()

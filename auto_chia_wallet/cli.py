@@ -3,7 +3,7 @@ import os
 
 from auto_chia_wallet.arg_parser import ArgParser
 from auto_chia_wallet.config import get_config_path, load_config
-from auto_wallet import generate_key, generate_plotnft, generate_plotnft_from_mnemonic
+from auto_chia_wallet.auto_wallet import generate_key, generate_plotnft, generate_plotnft_from_mnemonic
 
 
 def main():
