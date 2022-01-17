@@ -6,7 +6,7 @@ ssl:
   daemon_ssl:
     private_crt: "daemon/private_daemon.crt"
     private_key: "daemon/private_daemon.key"
-full_node: {
+full_node:
   hostname: "localhost"
   full_node_rpc_port: 8555
 feed_wallet:
@@ -20,7 +20,7 @@ pool_info:
   state: "SELF_POOLING"  # SELF_POOLING, FARMING_TO_POOL
   #url: "https://testnet.druid.garden"  # Can be any pool, this is mine on testnet10
 prefix: "xch"
-overrides:
+overrides: {}
 # For Testnet10 use below, otherwise it will use mainnet
 #    AGG_SIG_ME_ADDITIONAL_DATA: "ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"
 #    DIFFICULTY_CONSTANT_FACTOR: 10052721566054
