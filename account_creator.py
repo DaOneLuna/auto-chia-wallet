@@ -102,13 +102,9 @@ config = {
     # I Have been testing on testnet10
     "prefix": "txch",
     "overrides": {
-        "AGG_SIG_ME_ADDITIONAL_DATA": bytes.fromhex(
-            "ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"
-        ),
+        "AGG_SIG_ME_ADDITIONAL_DATA": bytes.fromhex("ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"),
         "DIFFICULTY_CONSTANT_FACTOR": 10052721566054,
-        "GENESIS_CHALLENGE": bytes.fromhex(
-            "ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"
-        ),
+        "GENESIS_CHALLENGE": bytes.fromhex("ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"),
         "GENESIS_PRE_FARM_FARMER_PUZZLE_HASH": bytes.fromhex(
             "3d8765d3a597ec1d99663f6c9816d915b9f68613ac94009884c4addaefcce6af"
         ),
@@ -159,17 +155,13 @@ async def init_pool_state(owner_sk, owner_puzzle_hash):
         "pool_url": pool_url,
         "state": config["pool_info"]["state"],
     }
-    initial_target_state = initial_pool_state_from_dict(
-        initial_target_state_dict, owner_pk, owner_puzzle_hash
-    )
+    initial_target_state = initial_pool_state_from_dict(initial_target_state_dict, owner_pk, owner_puzzle_hash)
     return initial_target_state
 
 
 async def send_feed_funds(wallet_client, address) -> TransactionRecord:
     print("Logging into feed wallet")
-    login_resp = await wallet_client.log_in_and_skip(
-        config["feed_wallet"]["fingerprint"]
-    )
+    login_resp = await wallet_client.log_in_and_skip(config["feed_wallet"]["fingerprint"])
     if login_resp is None or login_resp["success"] is False:
         raise Exception("Failed to login to feed wallet")
 
@@ -238,9 +230,7 @@ async def create_launcher_spend(
     launcher_parent: Coin = coins.copy().pop()
     genesis_launcher_puz: Program = SINGLETON_LAUNCHER
     amount = uint64(1)
-    launcher_coin: Coin = Coin(
-        launcher_parent.name(), genesis_launcher_puz.get_tree_hash(), amount
-    )
+    launcher_coin: Coin = Coin(launcher_parent.name(), genesis_launcher_puz.get_tree_hash(), amount)
     escaping_inner_puzzle: Program = create_waiting_room_inner_puzzle(
         initial_target_state.target_puzzle_hash,
         initial_target_state.relative_lock_height,
@@ -265,24 +255,14 @@ async def create_launcher_spend(
         puzzle = self_pooling_inner_puzzle
     else:
         raise ValueError("Invalid initial state")
-    full_pooling_puzzle: Program = create_full_puzzle(
-        puzzle, launcher_id=launcher_coin.name()
-    )
+    full_pooling_puzzle: Program = create_full_puzzle(puzzle, launcher_id=launcher_coin.name())
     puzzle_hash: bytes32 = full_pooling_puzzle.get_tree_hash()
-    pool_state_bytes = Program.to(
-        [("p", bytes(initial_target_state)), ("t", delay_time), ("h", delay_ph)]
-    )
+    pool_state_bytes = Program.to([("p", bytes(initial_target_state)), ("t", delay_time), ("h", delay_ph)])
     announcement_set: Set[bytes32] = set()
-    announcement_message = Program.to(
-        [puzzle_hash, amount, pool_state_bytes]
-    ).get_tree_hash()
-    announcement_set.add(
-        Announcement(launcher_coin.name(), announcement_message).name()
-    )
+    announcement_message = Program.to([puzzle_hash, amount, pool_state_bytes]).get_tree_hash()
+    announcement_set.add(Announcement(launcher_coin.name(), announcement_message).name())
     # Generate Signed SpendBundle
-    create_launcher_spend_bundle: Optional[
-        SpendBundle
-    ] = await generate_signed_spend_bundle(
+    create_launcher_spend_bundle: Optional[SpendBundle] = await generate_signed_spend_bundle(
         amount,
         genesis_launcher_puz.get_tree_hash(),
         change_address,
@@ -290,18 +270,14 @@ async def create_launcher_spend(
         announcement_set,
     )
     assert create_launcher_spend_bundle is not None
-    genesis_launcher_solution: Program = Program.to(
-        [puzzle_hash, amount, pool_state_bytes]
-    )
+    genesis_launcher_solution: Program = Program.to([puzzle_hash, amount, pool_state_bytes])
     launcher_cs: CoinSpend = CoinSpend(
         launcher_coin,
         SerializedProgram.from_program(genesis_launcher_puz),
         SerializedProgram.from_program(genesis_launcher_solution),
     )
     launcher_sb: SpendBundle = SpendBundle([launcher_cs], G2Element())
-    full_spend: SpendBundle = SpendBundle.aggregate(
-        [create_launcher_spend_bundle, launcher_sb]
-    )
+    full_spend: SpendBundle = SpendBundle.aggregate([create_launcher_spend_bundle, launcher_sb])
     return full_spend, puzzle_hash, launcher_coin.name()
 
 
@@ -377,9 +353,7 @@ async def _generate_unsigned_transaction(
 
     # Check for duplicates
     if primaries is not None:
-        all_primaries_list = [(p["puzzlehash"], p["amount"]) for p in primaries] + [
-            (newpuzzlehash, amount)
-        ]
+        all_primaries_list = [(p["puzzlehash"], p["amount"]) for p in primaries] + [(newpuzzlehash, amount)]
         if len(set(all_primaries_list)) != len(all_primaries_list):
             raise ValueError("Cannot create two identical coins")
 
@@ -395,14 +369,10 @@ async def _generate_unsigned_transaction(
                 primaries.append({"puzzlehash": newpuzzlehash, "amount": amount})
             if change > 0:
                 change_puzzle_hash: bytes32 = change_address
-                primaries.append(
-                    {"puzzlehash": change_puzzle_hash, "amount": uint64(change)}
-                )
+                primaries.append({"puzzlehash": change_puzzle_hash, "amount": uint64(change)})
             message_list: List[bytes32] = [c.name() for c in coins]
             for primary in primaries:
-                message_list.append(
-                    Coin(coin.name(), primary["puzzlehash"], primary["amount"]).name()
-                )
+                message_list.append(Coin(coin.name(), primary["puzzlehash"], primary["amount"]).name())
             message: bytes32 = std_hash(b"".join(message_list))
             solution: Program = make_solution(
                 primaries=primaries,
@@ -433,9 +403,7 @@ async def puzzle_for_puzzle_hash(puzzle_hash: bytes32) -> Program:
         print(error_msg)
         raise ValueError(error_msg)
     public_key, secret_key = maybe
-    synthetic_secret_key = calculate_synthetic_secret_key(
-        secret_key, DEFAULT_HIDDEN_PUZZLE_HASH
-    )
+    synthetic_secret_key = calculate_synthetic_secret_key(secret_key, DEFAULT_HIDDEN_PUZZLE_HASH)
     secret_key_store.save_secret_key(synthetic_secret_key)
     return puzzle_for_pk(public_key)
 
@@ -454,9 +422,7 @@ def make_solution(
     condition_list = []
     if primaries:
         for primary in primaries:
-            condition_list.append(
-                make_create_coin_condition(primary["puzzlehash"], primary["amount"])
-            )
+            condition_list.append(make_create_coin_condition(primary["puzzlehash"], primary["amount"]))
     if min_time > 0:
         condition_list.append(make_assert_absolute_seconds_exceeds_condition(min_time))
     if me:
@@ -514,9 +480,7 @@ async def main():
 
         # Print Initial Pool Data
         print(str(initial_target_state))
-        target_address = encode_puzzle_hash(
-            initial_target_state.target_puzzle_hash, config["prefix"]
-        )
+        target_address = encode_puzzle_hash(initial_target_state.target_puzzle_hash, config["prefix"])
         print(f"First Address Hex: {first_address_hex}")
         print(f"First Address: {first_address}")
         print(f"Target Address: {target_address}")
@@ -529,19 +493,13 @@ async def main():
         # Verify the sate
         PoolWallet._verify_initial_target_state(initial_target_state)
         # Send the funs needed to create the NFT from the feed wallet to the new address we created
-        transaction_record: TransactionRecord = await send_feed_funds(
-            wallet_client, first_address
-        )
+        transaction_record: TransactionRecord = await send_feed_funds(wallet_client, first_address)
         # Only move forward if the transaction was confirmed
         assert transaction_record.confirmed is True
         # Extract the needed coin
         coins: Set[Coin] = await get_coin_for_nft(transaction_record)
         # Create the spendbundle
-        (
-            spend_bundle,
-            singleton_puzzle_hash,
-            launcher_coin_id,
-        ) = await create_launcher_spend(
+        (spend_bundle, singleton_puzzle_hash, launcher_coin_id,) = await create_launcher_spend(
             coins,
             initial_target_state,
             p2_singleton_delay_time,
@@ -564,33 +522,25 @@ async def main():
             launcher_coin_id, p2_singleton_delay_time, p2_singleton_delayed_ph
         )
         print(f"Pool contract address hex(plotting): {p2_singleton_puzzle_hash.hex()}")
-        contract_address = encode_puzzle_hash(
-            p2_singleton_puzzle_hash, config["prefix"]
-        )
+        contract_address = encode_puzzle_hash(p2_singleton_puzzle_hash, config["prefix"])
         print(f"Pool contract address (plotting): {contract_address}")
 
         # Create output JSON
         output = {
             "mnemonic": mnemonic,
-            "pool_url": config["pool_info"]["url"]
-            if config["pool_info"]["url"] is not None
-            else "",
+            "pool_url": config["pool_info"]["url"] if config["pool_info"]["url"] is not None else "",
             "xch_payout_address": first_address,
             "launcher_id": launcher_coin_id.hex(),
             "farmer_key": str(master_sk_to_farmer_sk(key).get_g1()),
             "singleton_puzzle_hash": singleton_puzzle_hash.hex(),
             "pool_puzzle_hash": p2_singleton_puzzle_hash.hex(),
-            "pool_address": encode_puzzle_hash(
-                p2_singleton_puzzle_hash, config["prefix"]
-            ),
+            "pool_address": encode_puzzle_hash(p2_singleton_puzzle_hash, config["prefix"]),
         }
         print(json.dumps(output, sort_keys=True, indent=4, separators=(",", ": ")))
         print("Bye")
     except Exception as e:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_exception(
-            exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout
-        )
+        traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
     finally:
         node_client.close()
         wallet_client.close()

@@ -22,10 +22,7 @@ def load_config():
             config_file = yaml.load(file, Loader=yaml.SafeLoader)
             return schema.load(config_file)
     except FileNotFoundError as e:
-        raise Exception(
-            f"No 'config.yaml' file exists at: '{cf_path}', "
-            f"Please run: 'autowallet init'"
-        ) from e
+        raise Exception(f"No 'config.yaml' file exists at: '{cf_path}', " f"Please run: 'autowallet init'") from e
     except marshmallow.exceptions.ValidationError as e:
         raise Exception(f"Config file at: '{cf_path}' is malformed") from e
 
@@ -43,7 +40,7 @@ def generate_config():
                 f"A 'config.yaml' file already exists at the default location: '{cf_path}' \n\n"
                 "\tInput 'y' to overwrite existing file, or 'n' to exit without overwrite."
             ).lower()
-            if overwrite == 'n':
+            if overwrite == "n":
                 print("\nExited without overwriting file")
                 return
 
@@ -76,7 +73,7 @@ class SSLConfig:
 
 @dataclass
 class FullNodeInfo:
-    hostname: str = 'localhost'
+    hostname: str = "localhost"
     full_node_rpc_port: int = 8555
 
 
@@ -86,14 +83,14 @@ class FeedWalletInfo:
     fingerprint: int = 1234567890
     feed_amount: int = 100
     fee: int = 0
-    hostname: str = 'localhost'
+    hostname: str = "localhost"
     wallet_rpc_port: int = 9256
 
 
 @dataclass
 class PoolInfo:
     state: PoolSingletonState = SELF_POOLING
-    url: str = ''
+    url: str = ""
 
 
 # Used to deserialize config.yaml
@@ -103,7 +100,7 @@ class Config:
     full_node: FullNodeInfo
     feed_wallet: FeedWalletInfo
     pool_info: PoolInfo
-    overrides: dict[str,str]
-    root_path: str = '~/.chia/mainnet/config/ssl/'
-    prefix: str = 'xch'
-    output_dir: str = './'
+    overrides: dict[str, str]
+    root_path: str = "~/.chia/mainnet/config/ssl/"
+    prefix: str = "xch"
+    output_dir: str = "./"

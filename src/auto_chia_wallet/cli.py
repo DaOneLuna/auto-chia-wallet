@@ -10,12 +10,13 @@ def main():
     parser = ArgParser()
     args = parser.parse_args()
 
-    if args.cmd == 'version':
+    if args.cmd == "version":
         import pkg_resources
-        print(pkg_resources.get_distribution('auto_chia_wallet'))
+
+        print(pkg_resources.get_distribution("auto_chia_wallet"))
         return
 
-    elif args.cmd == 'config':
+    elif args.cmd == "config":
         config_path = get_config_path()
         if os.path.isfile(config_path):
             print(config_path)
@@ -24,17 +25,18 @@ def main():
         print(f"To generate a default config file, run: 'autowallet init'")
         return 1
 
-    elif args.cmd == 'init':
+    elif args.cmd == "init":
         from auto_chia_wallet.config import generate_config
+
         generate_config()
         return 0
 
-    elif args.cmd == 'generate':
+    elif args.cmd == "generate":
         config = load_config()
-        if args.target == 'key':
+        if args.target == "key":
             asyncio.run(generate_key(config))
             return 0
-        elif args.target == 'plotnft':
+        elif args.target == "plotnft":
             if args.m:
                 asyncio.run(generate_plotnft_from_mnemonic(config))
             else:
