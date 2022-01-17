@@ -2,6 +2,8 @@ import json
 import sys
 import traceback
 from typing import Optional, Set, Tuple, List, Dict
+from pathlib import Path
+from dataclasses import asdict
 
 from chia.cmds.plotnft_funcs import create_pool_args
 from chia.consensus.coinbase import create_puzzlehash_for_pk
@@ -68,6 +70,7 @@ class AmountWithPuzzlehash(TypedDict):
 
 
 class FakeWallet(PoolWallet):
+    key = None
 
     def __init__(self):
         self.node_client = None
@@ -75,34 +78,51 @@ class FakeWallet(PoolWallet):
         self.config = None
         self.secret_key_store = SecretKeyStore()
         self.puz_hashes = {}
-        self.key: PrivateKey = PrivateKey()
         self.mnemonic = ""
 
     @staticmethod
-    def new_wallet(config):
+    async def new_wallet(config):
         wallet: FakeWallet = FakeWallet()
-        wallet.constants = DEFAULT_CONSTANTS.replace(**config["overrides"])
-        wallet.config = config
-        wallet.generate_key()
+        wallet.config = asdict(config)
+        wallet.constants = DEFAULT_CONSTANTS.replace(**wallet.config["overrides"])
+        await wallet.generate_key()
         wallet.node_client = await FullNodeRpcClient.create(
-            config["full_node"]["hostname"],
-            config["full_node"]["full_node_rpc_port"],
-            config["root_path"],
-            config["ssl"],
+            wallet.config["full_node"]["hostname"],
+            wallet.config["full_node"]["full_node_rpc_port"],
+            wallet.config["root_path"],
+            {
+                "private_ssl_ca": {
+                    "crt": Path(wallet.config["ssl"]["private_ssl_ca"]["crt"]),
+                    "key": Path(wallet.config["ssl"]["private_ssl_ca"]["key"]),
+                },
+                "daemon_ssl": {
+                    "private_crt": Path(wallet.config["ssl"]["daemon_ssl"]["private_crt"]),
+                    "private_key": Path(wallet.config["ssl"]["daemon_ssl"]["private_key"]),
+                },
+            },
         )
         return wallet
 
     @staticmethod
-    def from_mnemonic(mnemonic, config):
+    async def from_mnemonic(mnemonic, config):
         wallet: FakeWallet = FakeWallet()
-        wallet.constants = DEFAULT_CONSTANTS.replace(**config["overrides"])
-        wallet.config = config
-        wallet.load_mnemonic(mnemonic)
+        wallet.config = asdict(config)
+        wallet.constants = DEFAULT_CONSTANTS.replace(**wallet.config["overrides"])
+        await wallet.load_mnemonic(mnemonic)
         wallet.node_client = await FullNodeRpcClient.create(
-            config["full_node"]["hostname"],
-            config["full_node"]["full_node_rpc_port"],
-            config["root_path"],
-            config["ssl"],
+            wallet.config["full_node"]["hostname"],
+            wallet.config["full_node"]["full_node_rpc_port"],
+            wallet.config["root_path"],
+            {
+                "private_ssl_ca": {
+                    "crt": Path(wallet.config["ssl"]["private_ssl_ca"]["crt"]),
+                    "key": Path(wallet.config["ssl"]["private_ssl_ca"]["key"]),
+                },
+                "daemon_ssl": {
+                    "private_crt": Path(wallet.config["ssl"]["daemon_ssl"]["private_crt"]),
+                    "private_key": Path(wallet.config["ssl"]["daemon_ssl"]["private_key"]),
+                },
+            },
         )
         return wallet
 
@@ -149,7 +169,7 @@ class FakeWallet(PoolWallet):
         return self.mnemonic
 
     def get_fp(self) -> str:
-        fingerprint: str = str(int(self.key.get_g1()))
+        fingerprint: str = str(self.key.get_g1().get_fingerprint())
         return fingerprint
 
     async def get_first_address(self) -> bytes32:
@@ -445,8 +465,8 @@ class FakeWallet(PoolWallet):
             raise ValueError(f"Error submitting nft spend_bundle: {push_tx_response}")
 
     async def create_plotnft(self):
+        feed_wallet: FeedWallet = await FeedWallet.connect(self.config)
         try:
-            feed_wallet = FeedWallet(self.config)
             initial_target_state = await self.init_pool_state()
             transaction_record: TransactionRecord = await feed_wallet.send_feed_funds(await self.get_first_address())
             coins: Set[Coin] = await self.get_coin_for_nft(transaction_record)

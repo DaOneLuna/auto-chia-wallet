@@ -1,19 +1,34 @@
 import time
 
+from pathlib import Path
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.wallet.transaction_record import TransactionRecord
 
 
 class FeedWallet:
+    wallet_client = None
+    config = None
 
-    def __init__(self, config):
-        self.config = config
-        self.wallet_client = await WalletRpcClient.create(
-            self.config["feed_wallet"]["hostname"],
-            self.config["feed_wallet"]["wallet_rpc_port"],
-            self.config["root_path"],
-            self.config["ssl"],
+    @staticmethod
+    async def connect(config):
+        wallet: FeedWallet = FeedWallet()
+        wallet.config = config
+        wallet.wallet_client = await WalletRpcClient.create(
+            wallet.config["feed_wallet"]["hostname"],
+            wallet.config["feed_wallet"]["wallet_rpc_port"],
+            wallet.config["root_path"],
+            {
+                "private_ssl_ca": {
+                    "crt": Path(wallet.config["ssl"]["private_ssl_ca"]["crt"]),
+                    "key": Path(wallet.config["ssl"]["private_ssl_ca"]["key"]),
+                },
+                "daemon_ssl": {
+                    "private_crt": Path(wallet.config["ssl"]["daemon_ssl"]["private_crt"]),
+                    "private_key": Path(wallet.config["ssl"]["daemon_ssl"]["private_key"]),
+                },
+            }
         )
+        return wallet
 
     async def send_feed_funds(self, address) -> TransactionRecord:
         print("Logging into feed wallet")

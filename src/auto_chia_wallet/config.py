@@ -1,10 +1,9 @@
 from dataclasses import dataclass
-from typing import Dict
 from shutil import copyfile
 
 from chia.pools.pool_wallet_info import PoolSingletonState, SELF_POOLING
 
-import defaults as resources
+import auto_chia_wallet.defaults as resources
 
 import os
 import appdirs
@@ -57,26 +56,31 @@ def generate_config():
         return
 
 
+@dataclass
 class DaemonSSL:
     private_crt: str = "daemon/private_daemon.crt"
     private_key: str = "daemon/private_daemon.key"
 
 
+@dataclass
 class PrivateSSL:
     crt: str = "ca/private_ca.crt"
     key: str = "ca/private_ca.key"
 
 
+@dataclass
 class SSLConfig:
     private_ssl_ca: PrivateSSL
     daemon_ssl: DaemonSSL
 
 
+@dataclass
 class FullNodeInfo:
     hostname: str = 'localhost'
     full_node_rpc_port: int = 8555
 
 
+@dataclass
 class FeedWalletInfo:
     id: str = "1"
     fingerprint: int = 1234567890
@@ -86,19 +90,20 @@ class FeedWalletInfo:
     wallet_rpc_port: int = 9256
 
 
+@dataclass
 class PoolInfo:
-    hostname: PoolSingletonState = SELF_POOLING
+    state: PoolSingletonState = SELF_POOLING
     url: str = ''
 
 
 # Used to deserialize config.yaml
 @dataclass
 class Config:
+    ssl: SSLConfig
+    full_node: FullNodeInfo
+    feed_wallet: FeedWalletInfo
+    pool_info: PoolInfo
+    overrides: dict[str,str]
     root_path: str = '~/.chia/mainnet/config/ssl/'
     prefix: str = 'xch'
-    output_dir: str = '../auto_chia_wallet2/'
-    ssl: SSLConfig = SSLConfig()
-    full_node: FullNodeInfo = FullNodeInfo()
-    feed_wallet: FeedWalletInfo = FeedWalletInfo()
-    pool_info: PoolInfo = PoolInfo()
-    overrides: Dict = None
+    output_dir: str = './'

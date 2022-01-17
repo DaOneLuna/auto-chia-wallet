@@ -25,16 +25,16 @@ def main():
         return 1
 
     elif args.cmd == 'init':
-        from config import generate_config
+        from auto_chia_wallet.config import generate_config
         generate_config()
         return 0
 
     elif args.cmd == 'generate':
         config = load_config()
-        if args.config_subcommand == 'key':
+        if args.target == 'key':
             asyncio.run(generate_key(config))
             return 0
-        elif args.config_subcommand == 'plotnft':
+        elif args.target == 'plotnft':
             if args.m:
                 asyncio.run(generate_plotnft_from_mnemonic(config))
             else:
