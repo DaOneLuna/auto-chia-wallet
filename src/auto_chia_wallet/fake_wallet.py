@@ -12,7 +12,8 @@ from chia.pools.pool_puzzles import (
     create_waiting_room_inner_puzzle,
     create_full_puzzle,
     SINGLETON_LAUNCHER,
-    create_pooling_inner_puzzle, launcher_id_to_p2_puzzle_hash,
+    create_pooling_inner_puzzle,
+    launcher_id_to_p2_puzzle_hash,
 )
 from chia.pools.pool_wallet import PoolWallet
 from chia.pools.pool_wallet_info import FARMING_TO_POOL, initial_pool_state_from_dict
@@ -39,7 +40,8 @@ from chia.util.keychain import (
 )
 from chia.wallet.derive_keys import (
     master_sk_to_wallet_sk,
-    master_sk_to_singleton_owner_sk, master_sk_to_farmer_sk,
+    master_sk_to_singleton_owner_sk,
+    master_sk_to_farmer_sk,
 )
 from chia.wallet.puzzles.puzzle_utils import (
     make_assert_coin_announcement,
@@ -159,9 +161,7 @@ class FakeWallet(PoolWallet):
             "pool_url": pool_url,
             "state": self.config["pool_info"]["state"].name,
         }
-        initial_target_state = initial_pool_state_from_dict(
-            initial_target_state_dict, owner_pk, owner_puzzle_hash
-        )
+        initial_target_state = initial_pool_state_from_dict(initial_target_state_dict, owner_pk, owner_puzzle_hash)
         PoolWallet._verify_initial_target_state(initial_target_state)
         return initial_target_state
 
@@ -207,19 +207,17 @@ class FakeWallet(PoolWallet):
             self.puz_hashes[puz_hash] = (wallet_sk.get_g1(), wallet_sk)
 
     async def create_launcher_spend(
-            self,
-            coins: Set[Coin],
-            initial_target_state,
-            delay_time: uint64,
-            delay_ph: bytes32,
-            change_address: bytes32,
+        self,
+        coins: Set[Coin],
+        initial_target_state,
+        delay_time: uint64,
+        delay_ph: bytes32,
+        change_address: bytes32,
     ) -> Tuple[SpendBundle, bytes32, bytes32]:
         launcher_parent: Coin = coins.copy().pop()
         genesis_launcher_puz: Program = SINGLETON_LAUNCHER
         amount = uint64(1)
-        launcher_coin: Coin = Coin(
-            launcher_parent.name(), genesis_launcher_puz.get_tree_hash(), amount
-        )
+        launcher_coin: Coin = Coin(launcher_parent.name(), genesis_launcher_puz.get_tree_hash(), amount)
         escaping_inner_puzzle: Program = create_waiting_room_inner_puzzle(
             initial_target_state.target_puzzle_hash,
             initial_target_state.relative_lock_height,
@@ -244,24 +242,14 @@ class FakeWallet(PoolWallet):
             puzzle = self_pooling_inner_puzzle
         else:
             raise ValueError("Invalid initial state")
-        full_pooling_puzzle: Program = create_full_puzzle(
-            puzzle, launcher_id=launcher_coin.name()
-        )
+        full_pooling_puzzle: Program = create_full_puzzle(puzzle, launcher_id=launcher_coin.name())
         puzzle_hash: bytes32 = full_pooling_puzzle.get_tree_hash()
-        pool_state_bytes = Program.to(
-            [("p", bytes(initial_target_state)), ("t", delay_time), ("h", delay_ph)]
-        )
+        pool_state_bytes = Program.to([("p", bytes(initial_target_state)), ("t", delay_time), ("h", delay_ph)])
         announcement_set: Set[bytes32] = set()
-        announcement_message = Program.to(
-            [puzzle_hash, amount, pool_state_bytes]
-        ).get_tree_hash()
-        announcement_set.add(
-            Announcement(launcher_coin.name(), announcement_message).name()
-        )
+        announcement_message = Program.to([puzzle_hash, amount, pool_state_bytes]).get_tree_hash()
+        announcement_set.add(Announcement(launcher_coin.name(), announcement_message).name())
         # Generate Signed SpendBundle
-        create_launcher_spend_bundle: Optional[
-            SpendBundle
-        ] = await self.generate_signed_spend_bundle(
+        create_launcher_spend_bundle: Optional[SpendBundle] = await self.generate_signed_spend_bundle(
             amount,
             genesis_launcher_puz.get_tree_hash(),
             change_address,
@@ -269,27 +257,23 @@ class FakeWallet(PoolWallet):
             announcement_set,
         )
         assert create_launcher_spend_bundle is not None
-        genesis_launcher_solution: Program = Program.to(
-            [puzzle_hash, amount, pool_state_bytes]
-        )
+        genesis_launcher_solution: Program = Program.to([puzzle_hash, amount, pool_state_bytes])
         launcher_cs: CoinSpend = CoinSpend(
             launcher_coin,
             SerializedProgram.from_program(genesis_launcher_puz),
             SerializedProgram.from_program(genesis_launcher_solution),
         )
         launcher_sb: SpendBundle = SpendBundle([launcher_cs], G2Element())
-        full_spend: SpendBundle = SpendBundle.aggregate(
-            [create_launcher_spend_bundle, launcher_sb]
-        )
+        full_spend: SpendBundle = SpendBundle.aggregate([create_launcher_spend_bundle, launcher_sb])
         return full_spend, puzzle_hash, launcher_coin.name()
 
     async def generate_signed_spend_bundle(
-            self,
-            amount: uint64,
-            puzzle_hash: bytes32,
-            change_address: bytes32,
-            coins: Set[Coin] = None,
-            announcements: Set[Announcement] = None,
+        self,
+        amount: uint64,
+        puzzle_hash: bytes32,
+        change_address: bytes32,
+        coins: Set[Coin] = None,
+        announcements: Set[Announcement] = None,
     ) -> Optional[SpendBundle]:
         spends = await self._generate_unsigned_transaction(
             amount,
@@ -312,15 +296,15 @@ class FakeWallet(PoolWallet):
         return spend_bundle
 
     async def _generate_unsigned_transaction(
-            self,
-            amount: uint64,
-            newpuzzlehash: bytes32,
-            fee: uint64 = uint64(0),
-            origin_id: bytes32 = None,
-            coins: Set[Coin] = None,
-            primaries_input: Optional[List[AmountWithPuzzlehash]] = None,
-            announcements_to_consume: Set[Announcement] = None,
-            change_address: bytes32 = None,
+        self,
+        amount: uint64,
+        newpuzzlehash: bytes32,
+        fee: uint64 = uint64(0),
+        origin_id: bytes32 = None,
+        coins: Set[Coin] = None,
+        primaries_input: Optional[List[AmountWithPuzzlehash]] = None,
+        announcements_to_consume: Set[Announcement] = None,
+        change_address: bytes32 = None,
     ) -> List[CoinSpend]:
         """
         Generates an unsigned transaction in form of List(Puzzle, Solutions)
@@ -356,9 +340,7 @@ class FakeWallet(PoolWallet):
 
         # Check for duplicates
         if primaries is not None:
-            all_primaries_list = [(p["puzzlehash"], p["amount"]) for p in primaries] + [
-                (newpuzzlehash, amount)
-            ]
+            all_primaries_list = [(p["puzzlehash"], p["amount"]) for p in primaries] + [(newpuzzlehash, amount)]
             if len(set(all_primaries_list)) != len(all_primaries_list):
                 raise ValueError("Cannot create two identical coins")
 
@@ -374,14 +356,10 @@ class FakeWallet(PoolWallet):
                     primaries.append({"puzzlehash": newpuzzlehash, "amount": amount})
                 if change > 0:
                     change_puzzle_hash: bytes32 = change_address
-                    primaries.append(
-                        {"puzzlehash": change_puzzle_hash, "amount": uint64(change)}
-                    )
+                    primaries.append({"puzzlehash": change_puzzle_hash, "amount": uint64(change)})
                 message_list: List[bytes32] = [c.name() for c in coins]
                 for primary in primaries:
-                    message_list.append(
-                        Coin(coin.name(), primary["puzzlehash"], primary["amount"]).name()
-                    )
+                    message_list.append(Coin(coin.name(), primary["puzzlehash"], primary["amount"]).name())
                 message: bytes32 = std_hash(b"".join(message_list))
                 solution: Program = self.make_solution(
                     primaries=primaries,
@@ -392,7 +370,8 @@ class FakeWallet(PoolWallet):
                 primary_announcement_hash = Announcement(coin.name(), message).name()
             else:
                 solution = self.make_solution(
-                    coin_announcements_to_assert={primary_announcement_hash})  # type: ignore[arg-type]  # noqa: E501
+                    coin_announcements_to_assert={primary_announcement_hash}
+                )  # type: ignore[arg-type]  # noqa: E501
 
             spends.append(
                 CoinSpend(
@@ -407,22 +386,20 @@ class FakeWallet(PoolWallet):
 
     @staticmethod
     def make_solution(
-            primaries: Optional[List[AmountWithPuzzlehash]] = None,
-            min_time=0,
-            me=None,
-            coin_announcements: Optional[Set[bytes32]] = None,
-            coin_announcements_to_assert: Optional[Set[bytes32]] = None,
-            puzzle_announcements: Optional[Set[bytes32]] = None,
-            puzzle_announcements_to_assert: Optional[Set[bytes32]] = None,
-            fee=0,
+        primaries: Optional[List[AmountWithPuzzlehash]] = None,
+        min_time=0,
+        me=None,
+        coin_announcements: Optional[Set[bytes32]] = None,
+        coin_announcements_to_assert: Optional[Set[bytes32]] = None,
+        puzzle_announcements: Optional[Set[bytes32]] = None,
+        puzzle_announcements_to_assert: Optional[Set[bytes32]] = None,
+        fee=0,
     ) -> Program:
         assert fee >= 0
         condition_list = []
         if primaries:
             for primary in primaries:
-                condition_list.append(
-                    make_create_coin_condition(primary["puzzlehash"], primary["amount"])
-                )
+                condition_list.append(make_create_coin_condition(primary["puzzlehash"], primary["amount"]))
         if min_time > 0:
             condition_list.append(make_assert_absolute_seconds_exceeds_condition(min_time))
         if me:
@@ -450,9 +427,7 @@ class FakeWallet(PoolWallet):
             print(error_msg)
             raise ValueError(error_msg)
         public_key, secret_key = maybe
-        synthetic_secret_key = calculate_synthetic_secret_key(
-            secret_key, DEFAULT_HIDDEN_PUZZLE_HASH
-        )
+        synthetic_secret_key = calculate_synthetic_secret_key(secret_key, DEFAULT_HIDDEN_PUZZLE_HASH)
         self.secret_key_store.save_secret_key(synthetic_secret_key)
         return puzzle_for_pk(public_key)
 
@@ -494,19 +469,15 @@ class FakeWallet(PoolWallet):
                 "farmer_key": str(await self.get_farmer_pub_key()),
                 "singleton_puzzle_hash": singleton_puzzle_hash.hex(),
                 "pool_puzzle_hash(plotting)": p2_singleton_puzzle_hash.hex(),
-                "pool_address": encode_puzzle_hash(
-                    p2_singleton_puzzle_hash, self.config["prefix"]
-                )
+                "pool_address": encode_puzzle_hash(p2_singleton_puzzle_hash, self.config["prefix"]),
             }
             print(json.dumps(output, sort_keys=True, indent=4, separators=(",", ": ")))
-            path: str = 'account' + self.get_fp() + '.json'
-            with open(path, 'w') as outfile:
+            path: str = "account" + self.get_fp() + ".json"
+            with open(path, "w") as outfile:
                 json.dump(output, outfile, sort_keys=True, indent=4, separators=(",", ": "))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(
-                exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout
-            )
+            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
         finally:
             self.close()
 

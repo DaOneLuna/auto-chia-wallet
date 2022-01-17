@@ -26,15 +26,13 @@ class FeedWallet:
                     "private_crt": Path(wallet.config["ssl"]["daemon_ssl"]["private_crt"]),
                     "private_key": Path(wallet.config["ssl"]["daemon_ssl"]["private_key"]),
                 },
-            }
+            },
         )
         return wallet
 
     async def send_feed_funds(self, address) -> TransactionRecord:
         print("Logging into feed wallet")
-        login_resp = await self.wallet_client.log_in_and_skip(
-            self.config["feed_wallet"]["fingerprint"]
-        )
+        login_resp = await self.wallet_client.log_in_and_skip(self.config["feed_wallet"]["fingerprint"])
         if login_resp is None or login_resp["success"] is False:
             raise Exception("Failed to login to feed wallet")
 
