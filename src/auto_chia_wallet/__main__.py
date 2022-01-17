@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
 
-import cli
+from . import cli
 
 cli.main()
