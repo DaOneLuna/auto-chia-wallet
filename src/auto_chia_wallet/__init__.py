@@ -22,6 +22,7 @@ async def generate_plotnft_from_mnemonic(config):
     await wallet.create_plotnft()
     wallet.close()
 
+
 async def load_key(config) -> [str]:
     print("in generate key")
     return ""
