@@ -45,7 +45,7 @@ autowallet config
 ```
 
 ### generate 
-Take 1 parameter, either key or plotnft
+Takes 1 parameter, either key or plotnft
 
 #### key
 will generate a new mnemonic and print it along with the first recieve address
@@ -54,7 +54,7 @@ autowallet generate key
 ```
 
 #### plotnft
-If passed -m the command will use an existing mnemonic, otherwise generates a mnemonic and funds it fromn a feed wallet. Prints all info to the console and creates a .json file specified in the config
+If passed -m the command will use an existing mnemonic, otherwise generates a mnemonic and funds it fromn a feed wallet. Generates a .json file.
 ```
 autowallet generate plotnft
 ```
