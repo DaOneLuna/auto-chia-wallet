@@ -4,7 +4,7 @@ import argparse
 class ArgParser:
     def __init__(self):
         self.parser = argparse.ArgumentParser(description="Chia Wallet and PlotNFT Generator")
-        self.parser.add_argument("-m", action="store_true")
+        self.parser.add_argument("-m", action="store_true", help="Use existing mnemonic seed to generate PlotNFT")
         sp = self.parser.add_subparsers(dest="cmd")
         sp.add_parser("config", help="display config.yaml location")
         sp.add_parser("init", help="generate config.yaml")

@@ -1,26 +1,26 @@
-root_path: "~/.chia/mainnet/config/ssl/"
-ssl:
+root_path: "~/.chia/mainnet/config/ssl/" # Default path to the chia ssl folder on linux, on Windows use
+ssl: # This section shouldn't need to be changed, but it is the ssl subfolders of the above root path
   private_ssl_ca:
     crt: "ca/private_ca.crt"
     key: "ca/private_ca.key"
   daemon_ssl:
     private_crt: "daemon/private_daemon.crt"
     private_key: "daemon/private_daemon.key"
-full_node:
-  hostname: "localhost"
-  full_node_rpc_port: 8555
-feed_wallet:
-  id: "1" # CHANGE TO YOUR WALLET ID
-  fingerprint: 1234567890  # CHANGE TO YOUR WALLET FINGERPRINT
-  feed_amount: 100  # I use 100, can really be anything > 2
-  fee: 0
-  hostname: "localhost"
-  wallet_rpc_port: 9256
-pool_info:
+full_node: # This is the fullnode we will be submitting the spendbundle to.
+  hostname: "localhost" # Hostname of the fullnode
+  full_node_rpc_port: 8555 # Default port for chia fullnode rpc, for testnet use 58555
+feed_wallet: # This is the wallet that will feed our new account coins to create the plotnft
+  id: "1" # The wallet ID to use
+  fingerprint: 1234567890  # The fingerprint of the feed wallet
+  feed_amount: 100  # I use 100, can really be anything > 2,
+  fee: 0 # Adjust this is the network starts to require fees or to avoid high network usage such as dust storms.
+  hostname: "localhost" # Hostname of the wallet node
+  wallet_rpc_port: 9256 # Default chia wallet rpc port
+pool_info: # The initial state of the plotnft, for self pooling url is ignored and can contain a value or be empty
   state: "SELF_POOLING"  # SELF_POOLING, FARMING_TO_POOL
-  #url: "https://testnet.druid.garden"  # Can be any pool, this is mine on testnet10
-prefix: "xch"
-overrides: {}
+  url: "https://testnet.druid.garden"  # Can be any valid pool, this is mine on testnet10
+prefix: "xch" # Prefix used for addresses
+overrides: {} # Overrides to the default chia config.
 # For Testnet10 use below, otherwise it will use mainnet
 #    AGG_SIG_ME_ADDITIONAL_DATA: "ae83525ba8d1dd3f09b277de18ca3e43fc0af20d20c4b3e92ef2a48bd291ccb2"
 #    DIFFICULTY_CONSTANT_FACTOR: 10052721566054
