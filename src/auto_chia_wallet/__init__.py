@@ -17,7 +17,6 @@ async def generate_plotnft(
         use_feed_wallet = False
 ):
     wallet: FakeWallet = await FakeWallet.new_wallet(config)
-    coins = set()
     if use_feed_wallet:
         coins = await wallet.fund_from_feed_wallet()
     else:
@@ -29,6 +28,7 @@ async def generate_plotnft(
             print(f"\rSearching for coins.....")
             time.sleep(5)
             coins = wallet.find_coins()
+        print(f"Found coin: {coins.copy().pop().name()}")
     await wallet.create_plotnft(coins)
     wallet.close()
 
@@ -52,6 +52,7 @@ async def generate_plotnft_from_mnemonic(
             print(f"Searching for coins.....")
             time.sleep(5)
             coins = await wallet.find_coins()
+        print(f"Found coin: {coins.copy().pop().name()}")
     await wallet.create_plotnft(coins)
     wallet.close()
 

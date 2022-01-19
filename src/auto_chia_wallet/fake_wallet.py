@@ -287,7 +287,6 @@ class FakeWallet(PoolWallet):
             change_address,
         )
         assert len(spends) > 0
-        print("Signing Transaction")
         spend_bundle: SpendBundle = await sign_coin_spends(
             spends,
             self.secret_key_store.secret_key_for_public_key,
@@ -473,7 +472,7 @@ class FakeWallet(PoolWallet):
             )
             if spend_bundle is None:
                 raise ValueError("Failed to generate Spend Bundle")
-
+            await self.send_spend_bundle(spend_bundle)
             # Create p2_singleton_puzzle_hash, used for plotting
             p2_singleton_puzzle_hash: bytes32 = launcher_id_to_p2_puzzle_hash(
                 launcher_coin_id, p2_singleton_delay_time, p2_singleton_delayed_ph
