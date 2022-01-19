@@ -63,6 +63,7 @@ autowallet generate key
 
 #### plotnft
 If passed -m the command will use an existing mnemonic, otherwise generates a mnemonic and funds it fromn a feed wallet. Generates a .json file.
+
 If passed -f the feed wallet in the config.yaml will be used, otherwise the script will print the first recieve address and waits for coins to be sent. This can be done manually or by pasting the wallet address into a faucet.
 ```
 autowallet generate plotnft
