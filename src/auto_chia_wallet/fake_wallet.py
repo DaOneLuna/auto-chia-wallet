@@ -224,7 +224,9 @@ class FakeWallet(PoolWallet):
             initial_target_state.relative_lock_height,
             initial_target_state.owner_pubkey,
             launcher_coin.name(),
-            bytes32(hexstr_to_bytes(self.constants.GENESIS_CHALLENGE)) if isinstance(self.constants.GENESIS_CHALLENGE, str) else bytes32(self.constants.GENESIS_CHALLENGE),
+            bytes32(hexstr_to_bytes(self.constants.GENESIS_CHALLENGE))
+            if isinstance(self.constants.GENESIS_CHALLENGE, str)
+            else bytes32(self.constants.GENESIS_CHALLENGE),
             delay_time,
             delay_ph,
         )
@@ -233,7 +235,9 @@ class FakeWallet(PoolWallet):
             escaping_inner_puzzle.get_tree_hash(),
             initial_target_state.owner_pubkey,
             launcher_coin.name(),
-            bytes32(hexstr_to_bytes(self.constants.GENESIS_CHALLENGE)) if isinstance(self.constants.GENESIS_CHALLENGE, str) else bytes32(self.constants.GENESIS_CHALLENGE),
+            bytes32(hexstr_to_bytes(self.constants.GENESIS_CHALLENGE))
+            if isinstance(self.constants.GENESIS_CHALLENGE, str)
+            else bytes32(self.constants.GENESIS_CHALLENGE),
             delay_time,
             delay_ph,
         )
@@ -290,7 +294,9 @@ class FakeWallet(PoolWallet):
         spend_bundle: SpendBundle = await sign_coin_spends(
             spends,
             self.secret_key_store.secret_key_for_public_key,
-            bytes32(hexstr_to_bytes(self.constants.AGG_SIG_ME_ADDITIONAL_DATA)) if isinstance(self.constants.AGG_SIG_ME_ADDITIONAL_DATA, str) else bytes32(self.constants.AGG_SIG_ME_ADDITIONAL_DATA),
+            bytes32(hexstr_to_bytes(self.constants.AGG_SIG_ME_ADDITIONAL_DATA))
+            if isinstance(self.constants.AGG_SIG_ME_ADDITIONAL_DATA, str)
+            else bytes32(self.constants.AGG_SIG_ME_ADDITIONAL_DATA),
             11000000000,  # MAX_BLOCK_COST_CLVM
         )
         return spend_bundle
@@ -442,7 +448,9 @@ class FakeWallet(PoolWallet):
     async def find_coins(self) -> Set[Coin]:
         init_sk = master_sk_to_wallet_sk(self.key, uint32(0))
         first_address_hex = create_puzzlehash_for_pk(init_sk.get_g1())
-        coin_records: List[CoinRecord] = await self.node_client.get_coin_records_by_puzzle_hash(first_address_hex, include_spent_coins=False)
+        coin_records: List[CoinRecord] = await self.node_client.get_coin_records_by_puzzle_hash(
+            first_address_hex, include_spent_coins=False
+        )
         coins: Set = set()
         for record in coin_records:
             if not record.spent:

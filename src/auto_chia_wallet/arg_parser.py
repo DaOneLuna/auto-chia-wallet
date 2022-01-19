@@ -13,7 +13,9 @@ class ArgParser:
         sp_generate.add_parser("key", help="Used to generate a new account")
         plotnft_parser = sp_generate.add_parser("plotnft", help="Used to create a plot nft")
         plotnft_parser.add_argument("-m", action="store_true", help="Use existing mnemonic seed to generate PlotNFT")
-        plotnft_parser.add_argument("-f", action="store_true", help="Use a feed wallet, default is to print address and wait for coins")
+        plotnft_parser.add_argument(
+            "-f", action="store_true", help="Use a feed wallet, default is to print address and wait for coins"
+        )
 
     def parse_args(self):
         return self.parser.parse_args()
