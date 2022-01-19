@@ -9,6 +9,14 @@ In the future I hope to make it compatible with faucets so a user will not need 
 
 ## How to use
 
+### Install 
+Using PIP
+```
+pip install git+https://github.com/DaOneLuna/auto-chia-wallet.git@main#egg=auto_chia_wallet
+```
+
+### Run
+
 1. Generate a new config file with:
 ```
 autowallet init
