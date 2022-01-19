@@ -100,7 +100,7 @@ class Config:
     full_node: FullNodeInfo
     feed_wallet: FeedWalletInfo
     pool_info: PoolInfo
-    overrides: Dict
+    overrides: Dict[str, str]
     root_path: str = "~/.chia/mainnet/config/ssl/"
     prefix: str = "xch"
     output_dir: str = "./"
