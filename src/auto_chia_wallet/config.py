@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from shutil import copyfile
-
+from typing import Dict
 from chia.pools.pool_wallet_info import PoolSingletonState, SELF_POOLING
 
 import auto_chia_wallet.defaults as resources
@@ -100,7 +100,7 @@ class Config:
     full_node: FullNodeInfo
     feed_wallet: FeedWalletInfo
     pool_info: PoolInfo
-    overrides: dict[str, str]
+    overrides: Dict
     root_path: str = "~/.chia/mainnet/config/ssl/"
     prefix: str = "xch"
     output_dir: str = "./"
