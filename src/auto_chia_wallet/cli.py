@@ -38,9 +38,9 @@ def main():
             return 0
         elif args.target == "plotnft":
             if args.m:
-                asyncio.run(generate_plotnft_from_mnemonic(config))
+                asyncio.run(generate_plotnft_from_mnemonic(config, args.f))
             else:
-                asyncio.run(generate_plotnft(config))
+                asyncio.run(generate_plotnft(config, args.f))
             return 0
         else:
             print("No action requested, add 'key' or 'plotnft'.")
