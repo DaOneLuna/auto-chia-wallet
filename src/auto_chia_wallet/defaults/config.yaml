@@ -1,4 +1,4 @@
-root_path: "~/.chia/mainnet/config/ssl/" # Default path to the chia ssl folder on linux, on Windows use
+root_path: "~/.chia/mainnet/config/ssl/" # Default path to the chia ssl folder on linux, on Windows use %AppData%\Local\auto_chia_wallet\auto_chia_wallet
 ssl: # This section shouldn't need to be changed, but it is the ssl subfolders of the above root path
   private_ssl_ca:
     crt: "ca/private_ca.crt"

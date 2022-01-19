@@ -22,6 +22,7 @@ from chia.types.announcement import Announcement
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import SerializedProgram, Program
 from chia.types.coin_spend import CoinSpend
+from chia.types.coin_record import CoinRecord
 from chia.types.spend_bundle import SpendBundle
 from chia.util.bech32m import encode_puzzle_hash
 from chia.util.byte_types import hexstr_to_bytes
@@ -439,12 +440,28 @@ class FakeWallet(PoolWallet):
         else:
             raise ValueError(f"Error submitting nft spend_bundle: {push_tx_response}")
 
-    async def create_plotnft(self):
+    async def find_coins(self) -> Set[Coin]:
+        init_sk = master_sk_to_wallet_sk(self.key, uint32(0))
+        first_address_hex = create_puzzlehash_for_pk(init_sk.get_g1())
+        coin_records: List[CoinRecord] = await self.node_client.get_coin_records_by_puzzle_hash(first_address_hex, include_spent_coins=False)
+        coins: Set = set()
+        for record in coin_records:
+            if not record.spent:
+                coin = record.coin
+                coins.add(coin)
+                break
+        return coins
+
+    async def fund_from_feed_wallet(self) -> Set[Coin]:
         feed_wallet: FeedWallet = await FeedWallet.connect(self.config)
+        transaction_record: TransactionRecord = await feed_wallet.send_feed_funds(await self.get_first_address())
+        coins: Set[Coin] = await self.get_coin_for_nft(transaction_record)
+        feed_wallet.close()
+        return coins
+
+    async def create_plotnft(self, coins: Set[Coin]):
         try:
             initial_target_state = await self.init_pool_state()
-            transaction_record: TransactionRecord = await feed_wallet.send_feed_funds(await self.get_first_address())
-            coins: Set[Coin] = await self.get_coin_for_nft(transaction_record)
             p2_singleton_delayed_ph, p2_singleton_delay_time = await self.get_p2_delay_info()
             owner_puzzle_hash = await self.get_payout_address()
             (spend_bundle, singleton_puzzle_hash, launcher_coin_id) = await self.create_launcher_spend(
