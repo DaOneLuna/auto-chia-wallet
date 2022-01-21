@@ -12,10 +12,7 @@ async def generate_key(config):
     wallet.close()
 
 
-async def generate_plotnft(
-        config,
-        use_feed_wallet = False
-):
+async def generate_plotnft(config, use_feed_wallet=False):
     wallet: FakeWallet = await FakeWallet.new_wallet(config)
     if use_feed_wallet:
         coins = await wallet.fund_from_feed_wallet()
@@ -29,17 +26,15 @@ async def generate_plotnft(
             time.sleep(5)
             coins = await wallet.find_coins()
         print(f"Found coin: {coins.copy().pop().name()}")
-    await wallet.create_plotnft(coins)
+    output = await wallet.create_plotnft(coins)
     wallet.close()
+    return output
 
 
-async def generate_plotnft_from_mnemonic(
-        config,
-        use_feed_wallet = False
-):
+async def generate_plotnft_from_mnemonic(config, use_feed_wallet=False):
     mnemonic = await load_key()
     if len(mnemonic) == 0:
-        return
+        return {}
     wallet: FakeWallet = await FakeWallet.from_mnemonic(mnemonic, config)
     if use_feed_wallet:
         coins = await wallet.fund_from_feed_wallet()
@@ -53,8 +48,9 @@ async def generate_plotnft_from_mnemonic(
             time.sleep(5)
             coins = await wallet.find_coins()
         print(f"Found coin: {coins.copy().pop().name()}")
-    await wallet.create_plotnft(coins)
+    output = await wallet.create_plotnft(coins)
     wallet.close()
+    return output
 
 
 async def load_key() -> [str]:
@@ -73,5 +69,4 @@ async def load_key() -> [str]:
             else:
                 print(f"Expected 24 words, got {len(words)}, try again or type 'q' to quit")
                 valid = False
-
     return mnemonic
