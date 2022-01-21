@@ -8,10 +8,8 @@ def lambda_handler(event, context):
 
     nft_data = generate_plotnft(config, use_feed_wallet=True)
 
-    return {'statusCode': 200,
-            'headers': {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": 'GET'
-            },
-            'body': nft_data
-            }
+    return {
+        "statusCode": 200,
+        "headers": {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET"},
+        "body": nft_data,
+    }
