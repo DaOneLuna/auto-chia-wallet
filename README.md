@@ -3,11 +3,15 @@
 
 Automatically creates a Chia wallet, Funds it from a wallet node and submits a NFT transaction. This is to pre-create accounts with NFT's intended for plotting without waiting for a wallet to sync.
 
-This is done using a "feed wallet" that supplies a coin to the created key. Since this is a controlled wallet we can easily look up what coin was transferred and use that coin to create the plotnft singleton.
-
-In the future I hope to make it compatible with faucets so a user will not need to feed from another wallet. 
-
 ## How to use
+
+### Install 
+Using PIP
+```
+pip install git+https://github.com/DaOneLuna/auto-chia-wallet.git@main#egg=auto_chia_wallet
+```
+
+### Run
 
 1. Generate a new config file with:
 ```
@@ -55,6 +59,8 @@ autowallet generate key
 
 #### plotnft
 If passed -m the command will use an existing mnemonic, otherwise generates a mnemonic and funds it fromn a feed wallet. Generates a .json file.
+
+If passed -f the feed wallet in the config.yaml will be used, otherwise the script will print the first recieve address and waits for coins to be sent. This can be done manually or by pasting the wallet address into a faucet.
 ```
 autowallet generate plotnft
 ```
