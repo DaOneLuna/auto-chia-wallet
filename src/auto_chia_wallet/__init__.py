@@ -1,6 +1,7 @@
 import time
 from typing import Dict
 
+
 from auto_chia_wallet.fake_wallet import FakeWallet
 
 
@@ -13,7 +14,10 @@ async def generate_key(config):
     wallet.close()
 
 
-async def generate_plotnft(config, use_feed_wallet=False) -> Dict:
+async def generate_plotnft(
+        config,
+        use_feed_wallet = False
+):
     wallet: FakeWallet = await FakeWallet.new_wallet(config)
     if use_feed_wallet:
         coins = await wallet.fund_from_feed_wallet()
@@ -32,7 +36,10 @@ async def generate_plotnft(config, use_feed_wallet=False) -> Dict:
     return output
 
 
-async def generate_plotnft_from_mnemonic(config, use_feed_wallet=False) -> Dict:
+async def generate_plotnft_from_mnemonic(
+        config,
+        use_feed_wallet = False
+):
     mnemonic = await load_key()
     if len(mnemonic) == 0:
         return {}
@@ -70,5 +77,4 @@ async def load_key() -> [str]:
             else:
                 print(f"Expected 24 words, got {len(words)}, try again or type 'q' to quit")
                 valid = False
-
     return mnemonic
