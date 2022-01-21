@@ -1,5 +1,5 @@
-from src.auto_chia_wallet import generate_plotnft
-from src.auto_chia_wallet.config import load_config_from_file
+from auto_chia_wallet import generate_plotnft
+from auto_chia_wallet.config import load_config_from_file
 
 
 def lambda_handler(event, context):
