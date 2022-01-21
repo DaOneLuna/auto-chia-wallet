@@ -19,8 +19,7 @@ def load_config():
     cf_path = get_config_path()
     try:
         with open(cf_path, "r") as file:
-            config_file = yaml.load(file, Loader=yaml.SafeLoader)
-            return schema.load(config_file)
+            return schema.load(yaml.safe_load(file))
     except FileNotFoundError as e:
         raise Exception(f"No 'config.yaml' file exists at: '{cf_path}', Please run: 'autowallet init'") from e
     except marshmallow.exceptions.ValidationError as e:
@@ -31,8 +30,7 @@ def load_config_from_file(file):
     schema = desert.schema(Config)
     try:
         with file:
-            config_file = yaml.load(file, Loader=yaml.SafeLoader)
-            return schema.load(config_file)
+            return schema.load(yaml.safe_load(file))
     except FileNotFoundError as e:
         raise Exception(f"No 'config.yaml' file exists at: '{file.name}'") from e
     except marshmallow.exceptions.ValidationError as e:

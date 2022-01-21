@@ -1,13 +1,15 @@
 import time
 
 from pathlib import Path
+from typing import Dict
+
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.wallet.transaction_record import TransactionRecord
 
 
 class FeedWallet:
-    wallet_client = None
-    config = None
+    wallet_client: WalletRpcClient
+    config: Dict
 
     @staticmethod
     async def connect(config):
@@ -59,7 +61,7 @@ class FeedWallet:
         confirmed = False
         total_wait = 0
         while not confirmed:
-            print("\rWaiting for transaction to be confirmed: " + str(total_wait), end="")
+            print(f"\rWaiting for transaction to be confirmed: {str(total_wait)} ")
             time.sleep(5)
             total_wait = total_wait + 5
             transaction_record = await self.wallet_client.get_transaction(
@@ -68,10 +70,7 @@ class FeedWallet:
             )
             confirmed = transaction_record.confirmed
         print(
-            "\rTransaction confirmed at height: "
-            + str(transaction_record.confirmed_at_height)
-            + ", tx_id: "
-            + transaction_record.name.hex()
+            f"\rTransaction confirmed at height: {transaction_record.confirmed_at_height} tx_id: {transaction_record.name.hex()}"
         )
         return transaction_record
 

@@ -7,6 +7,7 @@ from dataclasses import asdict
 
 from chia.cmds.plotnft_funcs import create_pool_args
 from chia.consensus.coinbase import create_puzzlehash_for_pk
+from chia.consensus.constants import ConsensusConstants
 from chia.consensus.default_constants import DEFAULT_CONSTANTS
 from chia.pools.pool_puzzles import (
     create_waiting_room_inner_puzzle,
@@ -73,15 +74,13 @@ class AmountWithPuzzlehash(TypedDict):
 
 
 class FakeWallet(PoolWallet):
-    key = None
-
-    def __init__(self):
-        self.node_client = None
-        self.constants = None
-        self.config = None
-        self.secret_key_store = SecretKeyStore()
-        self.puz_hashes = {}
-        self.mnemonic = ""
+    key: PrivateKey
+    node_client: FullNodeRpcClient
+    constants: ConsensusConstants
+    config: Dict
+    secret_key_store = SecretKeyStore()
+    puz_hashes: Dict
+    mnemonic: str
 
     @staticmethod
     async def new_wallet(config):
@@ -184,7 +183,7 @@ class FakeWallet(PoolWallet):
         owner_puzzle_hash = create_puzzlehash_for_pk(wallet_sk.get_g1())
         return owner_puzzle_hash
 
-    async def get_p2_delay_info(self) -> (bytes, uint64):
+    async def get_p2_delay_info(self) -> Tuple[bytes, uint64]:
         sk = master_sk_to_wallet_sk(self.key, uint32(2))
         p2_singleton_delayed_ph = create_puzzlehash_for_pk(sk.get_g1())
         p2_singleton_delay_time = uint64(604800)
