@@ -466,7 +466,8 @@ class FakeWallet(PoolWallet):
         feed_wallet.close()
         return coins
 
-    async def create_plotnft(self, coins: Set[Coin]):
+    async def create_plotnft(self, coins: Set[Coin]) -> Dict:
+        json_output = {}
         try:
             initial_target_state = await self.init_pool_state()
             p2_singleton_delayed_ph, p2_singleton_delay_time = await self.get_p2_delay_info()
@@ -485,7 +486,7 @@ class FakeWallet(PoolWallet):
             p2_singleton_puzzle_hash: bytes32 = launcher_id_to_p2_puzzle_hash(
                 launcher_coin_id, p2_singleton_delay_time, p2_singleton_delayed_ph
             )
-            output = {
+            json_output = {
                 "mnemonic": await self.get_mnemonic(),
                 "pool_url": self.config["pool_info"]["url"] if self.config["pool_info"]["url"] is not None else "",
                 "xch_payout_address": await self.get_first_address(),
@@ -495,15 +496,13 @@ class FakeWallet(PoolWallet):
                 "pool_puzzle_hash(plotting)": p2_singleton_puzzle_hash.hex(),
                 "pool_address": encode_puzzle_hash(p2_singleton_puzzle_hash, self.config["prefix"]),
             }
-            print(json.dumps(output, sort_keys=True, indent=4, separators=(",", ": ")))
-            path: str = "account" + self.get_fp() + ".json"
-            with open(path, "w") as outfile:
-                json.dump(output, outfile, sort_keys=True, indent=4, separators=(",", ": "))
+            print(json.dumps(json_output, sort_keys=True, indent=4, separators=(",", ": ")))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
         finally:
             self.close()
+        return json_output
 
     def close(self):
         self.node_client.close()
