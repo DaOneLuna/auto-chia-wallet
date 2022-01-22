@@ -495,15 +495,12 @@ class FakeWallet(PoolWallet):
                     "singleton_puzzle_hash": singleton_puzzle_hash.hex(),
                     "pool_puzzle_hash(plotting)": p2_singleton_puzzle_hash.hex(),
                     "pool_address": encode_puzzle_hash(p2_singleton_puzzle_hash, self.config["prefix"]),
-                }
+                },
             }
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
-            json_output = {
-                "status": "error",
-                "data": repr(e)
-            }
+            json_output = {"status": "error", "data": repr(e)}
         finally:
             self.close()
         print(json.dumps(json_output, sort_keys=True, indent=4, separators=(",", ": ")))
