@@ -65,7 +65,7 @@ from chia.wallet.secret_key_store import SecretKeyStore
 
 
 # will replace this when the chia provided through pip is updated to allow importing the class
-from auto_chia_wallet.feed_wallet import FeedWallet
+from feed_wallet import FeedWallet
 
 
 class AmountWithPuzzlehash(TypedDict):
