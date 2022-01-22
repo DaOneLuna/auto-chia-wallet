@@ -79,7 +79,7 @@ class FakeWallet(PoolWallet):
     constants: ConsensusConstants
     config: Dict
     secret_key_store = SecretKeyStore()
-    puz_hashes: Dict
+    puz_hashes: Dict = {}
     mnemonic: str
 
     @staticmethod
