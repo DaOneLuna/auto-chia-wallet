@@ -53,7 +53,7 @@ async def generate_plotnft_from_mnemonic(config, use_feed_wallet=False):
     return output
 
 
-async def load_key() -> [str]:
+async def load_key() -> str:
     valid = False
     mnemonic = ""
     while not valid:
