@@ -3,7 +3,7 @@ from shutil import copyfile
 from typing import Dict, Any
 from chia.pools.pool_wallet_info import PoolSingletonState, SELF_POOLING
 
-from . import defaults as resources
+import auto_chia_wallet.defaults as resources
 
 import os
 import appdirs
