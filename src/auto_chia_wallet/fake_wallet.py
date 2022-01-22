@@ -466,7 +466,6 @@ class FakeWallet(PoolWallet):
         return coins
 
     async def create_plotnft(self, coins: Set[Coin]) -> Dict:
-        json_output = {}
         try:
             initial_target_state = await self.init_pool_state()
             p2_singleton_delayed_ph, p2_singleton_delay_time = await self.get_p2_delay_info()
@@ -486,21 +485,28 @@ class FakeWallet(PoolWallet):
                 launcher_coin_id, p2_singleton_delay_time, p2_singleton_delayed_ph
             )
             json_output = {
-                "mnemonic": await self.get_mnemonic(),
-                "pool_url": self.config["pool_info"]["url"] if self.config["pool_info"]["url"] is not None else "",
-                "xch_payout_address": await self.get_first_address(),
-                "launcher_id": launcher_coin_id.hex(),
-                "farmer_key": str(await self.get_farmer_pub_key()),
-                "singleton_puzzle_hash": singleton_puzzle_hash.hex(),
-                "pool_puzzle_hash(plotting)": p2_singleton_puzzle_hash.hex(),
-                "pool_address": encode_puzzle_hash(p2_singleton_puzzle_hash, self.config["prefix"]),
+                "status": "success",
+                "data": {
+                    "mnemonic": await self.get_mnemonic(),
+                    "pool_url": self.config["pool_info"]["url"] if self.config["pool_info"]["url"] is not None else "",
+                    "xch_payout_address": await self.get_first_address(),
+                    "launcher_id": launcher_coin_id.hex(),
+                    "farmer_key": str(await self.get_farmer_pub_key()),
+                    "singleton_puzzle_hash": singleton_puzzle_hash.hex(),
+                    "pool_puzzle_hash(plotting)": p2_singleton_puzzle_hash.hex(),
+                    "pool_address": encode_puzzle_hash(p2_singleton_puzzle_hash, self.config["prefix"]),
+                }
             }
-            print(json.dumps(json_output, sort_keys=True, indent=4, separators=(",", ": ")))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=2, file=sys.stdout)
+            json_output = {
+                "status": "error",
+                "data": repr(e)
+            }
         finally:
             self.close()
+        print(json.dumps(json_output, sort_keys=True, indent=4, separators=(",", ": ")))
         return json_output
 
     def close(self):

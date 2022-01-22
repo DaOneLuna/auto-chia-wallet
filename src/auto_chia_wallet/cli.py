@@ -14,13 +14,13 @@ def main():
         import pkg_resources
 
         print(pkg_resources.get_distribution("auto_chia_wallet"))
-        return
+        return 0
 
     elif args.cmd == "config":
         config_path = get_config_path()
         if os.path.isfile(config_path):
             print(config_path)
-            return
+            return 0
         print(f"No 'config.yaml' file exists at expected location: '{config_path}'")
         print(f"To generate a default config file, run: 'autowallet init'")
         return 1
