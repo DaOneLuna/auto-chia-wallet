@@ -113,4 +113,4 @@ class Config:
     overrides: Dict[str, Any]
     root_path: str = "~/.chia/mainnet/config/ssl/"
     prefix: str = "xch"
-    output_dir: str = "./"
+    output_dir: str = "/"
