@@ -1,6 +1,6 @@
 import time
 
-from fake_wallet import FakeWallet
+from auto_chia_wallet.fake_wallet import FakeWallet
 
 
 async def generate_key(config):

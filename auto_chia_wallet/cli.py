@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from . import generate_key, generate_plotnft_from_mnemonic, generate_plotnft
+from auto_chia_wallet import generate_key, generate_plotnft_from_mnemonic, generate_plotnft
 from arg_parser import ArgParser
 from config import get_config_path, load_config
 
