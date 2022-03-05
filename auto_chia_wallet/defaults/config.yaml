@@ -19,6 +19,8 @@ feed_wallet: # This is the wallet that will feed our new account coins to create
 pool_info: # The initial state of the plotnft, for self pooling url is ignored and can contain a value or be empty
   state: "SELF_POOLING"  # SELF_POOLING, FARMING_TO_POOL
   url: "https://testnet.druid.garden"  # Can be any valid pool, this is mine on testnet10
+nft:
+  fee: 0 # Adjust this is the network starts to require fees or to avoid high network usage such as dust storms.
 prefix: "xch" # Prefix used for addresses
 overrides: {} # Overrides to the default chia config.
 # For Testnet10 use below, otherwise it will use mainnet

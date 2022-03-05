@@ -103,6 +103,11 @@ class PoolInfo:
     url: str = ""
 
 
+@dataclass
+class NFT:
+    fee: int = 0
+
+
 # Used to deserialize config.yaml
 @dataclass
 class Config:
@@ -110,6 +115,7 @@ class Config:
     full_node: FullNodeInfo
     feed_wallet: FeedWalletInfo
     pool_info: PoolInfo
+    nft: NFT
     overrides: Dict[str, Any]
     root_path: str = "~/.chia/mainnet/config/ssl/"
     prefix: str = "xch"

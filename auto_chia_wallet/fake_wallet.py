@@ -282,7 +282,7 @@ class FakeWallet(PoolWallet):
         spends = await self._generate_unsigned_transaction(
             amount,
             puzzle_hash,
-            uint64(0),
+            self.config["nft"]["fee"],
             None,
             coins,
             None,
