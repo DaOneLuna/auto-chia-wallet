@@ -22,7 +22,7 @@ autowallet init
 autowallet config
 ```
 3. Edit the config file to match your enviroment
-> For Details on the config see the default file at: https://github.com/DaOneLuna/auto-chia-wallet/blob/main/src/auto_chia_wallet/defaults/config.yaml
+> For Details on the config see the default file at: https://github.com/DaOneLuna/auto-chia-wallet/blob/main/auto_chia_wallet/defaults/config.yaml
 
 4. Accounts can be generated with:
 ```
